@@ -10,6 +10,7 @@ on:
       - releases/*
     paths-ignore:
       - '**.md'
+  workflow_dispatch:
 
 jobs:
   local-cache:
@@ -42,8 +43,12 @@ jobs:
         uses: ./
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Verify node and npm
-        run: __tests__/verify-node.sh "$(nvm version "${{ matrix.node-version }}")"
+      - if: runner.os != 'Windows'
+        name: Verify node and npm
+        run: |
+          . "$NVM_DIR/nvm.sh"
+          [[ $(nvm version-remote "${{ matrix.node-version }}") =~ ^v([^.]*) ]]
+          __tests__/verify-node.sh "${BASH_REMATCH[1]}"
         shell: bash
 
   manifest:
